@@ -27,7 +27,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         // 데이터베이스의 모든 리뷰를 관찰 (Observe)
-        database.reviewDao().getAllReviews().observe(this) { reviews ->
+        database.reviewDao().getAll().observe(this) { reviews ->
             // .toList()를 호출하여 Java List를 Kotlin List로 변환 (오류 수정)
             reviewAdapter.submitList(reviews?.toList())
         }

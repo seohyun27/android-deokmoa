@@ -1,7 +1,9 @@
 package com.example.deokmoa
 
-import android.net.Uri
+// import 1개 추가
+import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -12,6 +14,8 @@ import com.example.deokmoa.data.Review
 import com.example.deokmoa.data.Tag
 import com.example.deokmoa.databinding.ActivityReviewDetailBinding
 import kotlinx.coroutines.launch
+import java.io.File
+import java.lang.Exception
 
 class ReviewDetailActivity : AppCompatActivity() {
 
@@ -31,7 +35,6 @@ class ReviewDetailActivity : AppCompatActivity() {
             return
         }
 
-        // LiveData를 관찰하여 리뷰 정보 표시
         database.reviewDao().getReviewById(reviewId).observe(this) { review ->
             review?.let {
                 currentReview = it
@@ -39,8 +42,17 @@ class ReviewDetailActivity : AppCompatActivity() {
             }
         }
 
-        // (참고) 수정 기능은 AddReviewActivity를 재사용하는 방식으로 구현할 수 있습니다.
-        // binding.btnEdit.setOnClickListener { ... }
+        // ⭐️ "수정" 버튼 리스너 (XML에 ID: btnEdit 버튼 필요)
+        binding.btnEdit.setOnClickListener {
+            currentReview?.let { review ->
+                // AddReviewActivity를 "수정 모드"로 연다
+                val intent = Intent(this, AddReviewActivity::class.java).apply {
+                    // "EDIT_REVIEW_ID" 라는 Key로 현재 리뷰 ID를 넘겨준다
+                    putExtra("EDIT_REVIEW_ID", review.id)
+                }
+                startActivity(intent)
+            }
+        }
 
         // 삭제 버튼
         binding.btnDelete.setOnClickListener {
@@ -50,41 +62,55 @@ class ReviewDetailActivity : AppCompatActivity() {
         }
     }
 
-    // 리뷰 상세 정보 UI에 표시
+    // (populateReviewDetails 함수는 동일 - 수정 없음)
     private fun populateReviewDetails(review: Review) {
         binding.tvDetailTitle.text = review.title
         binding.rbDetailRating.rating = review.rating
         binding.tvDetailReviewText.text = review.reviewText
 
-        // 카테고리 (Enum의 displayName으로 변환)
         val categoryDisplayName = Category.values().find { it.name == review.category }?.displayName ?: review.category
         binding.tvDetailCategory.text = "카테고리: $categoryDisplayName"
 
-        // 태그 (쉼표로 구분된 name을 displayName으로 변환)
         val tagDisplayNames = review.tags.split(",")
             .mapNotNull { tagName -> Tag.values().find { it.name == tagName }?.displayName }
             .joinToString(", ")
         binding.tvDetailTags.text = "태그: $tagDisplayNames"
 
-        // 이미지
         if (!review.imageUri.isNullOrEmpty()) {
-            binding.ivDetailImage.load(Uri.parse(review.imageUri)) {
+            val file = File(filesDir, review.imageUri!!)
+            binding.ivDetailImage.load(file) {
                 crossfade(true)
                 placeholder(R.drawable.ic_launcher_background)
                 error(R.drawable.ic_launcher_background)
+                listener(onError = { _, result ->
+                    Log.e("ReviewDetailActivity", "Coil (File) load failed: ${result.throwable.message}")
+                })
             }
         } else {
             binding.ivDetailImage.setImageResource(R.drawable.ic_launcher_background)
         }
     }
 
-    // 리뷰 삭제
+    // (deleteReview 함수는 동일 - 수정 없음)
     private fun deleteReview(review: Review) {
         lifecycleScope.launch {
+            if (!review.imageUri.isNullOrEmpty()) {
+                try {
+                    val file = File(filesDir, review.imageUri!!)
+                    if (file.exists()) {
+                        file.delete()
+                        Log.d("ReviewDetailActivity", "Internal image file deleted: ${review.imageUri}")
+                    }
+                } catch (e: Exception) {
+                    Log.e("ReviewDetailActivity", "Failed to delete internal file", e)
+                }
+            }
+
             database.reviewDao().delete(review)
+
             runOnUiThread {
                 Toast.makeText(this@ReviewDetailActivity, "리뷰가 삭제되었습니다.", Toast.LENGTH_SHORT).show()
-                finish() // 액티비티 종료
+                finish()
             }
         }
     }

@@ -1,6 +1,9 @@
 package com.example.deokmoa
 
-import android.net.Uri
+// import 2개 추가 (android.net.Uri는 이제 사용하지 않으므로 제거해도 됩니다)
+import java.io.File // ⭐️ File 객체 사용을 위해 import 추가
+import android.util.Log // ⭐️ (선택) 로그 확인용
+
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
@@ -34,12 +37,21 @@ class ReviewAdapter(private val onItemClicked: (Review) -> Unit) :
             binding.tvReviewTitle.text = review.title
             binding.rbReviewRating.rating = review.rating
 
-            // 이미지 URI가 있으면 Coil을 사용해 로드
+            // 이미지 파일 이름이 있으면 File 객체로 로드
             if (!review.imageUri.isNullOrEmpty()) {
-                binding.ivReviewImage.load(Uri.parse(review.imageUri)) {
+                // 1. ViewHolder의 아이템 뷰(root)에서 context를 가져온다
+                val context = binding.root.context
+                // 2. context.filesDir와 파일 이름으로 File 객체 생성
+                val file = File(context.filesDir, review.imageUri!!)
+
+                // 3. Uri.parse() 대신 File 객체로 로드
+                binding.ivReviewImage.load(file) {
                     crossfade(true)
                     placeholder(R.drawable.ic_launcher_background) // 로딩 중 이미지 (임시)
                     error(R.drawable.ic_launcher_background) // 에러 시 이미지 (임시)
+                    listener(onError = { _, result ->
+                        Log.e("ReviewAdapter", "Coil (File) load failed: ${result.throwable.message}")
+                    })
                 }
             } else {
                 // 이미지가 없을 경우 기본 이미지 설정 (임시)
