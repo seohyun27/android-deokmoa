@@ -16,6 +16,7 @@ import com.example.deokmoa.databinding.ItemReviewBinding
 // RecyclerView 어댑터 (ListAdapter 사용)
 class ReviewAdapter(private val onItemClicked: (Review) -> Unit) :
     ListAdapter<Review, ReviewAdapter.ReviewViewHolder>(DiffCallback) {
+    private var original: List<Review> = emptyList()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ReviewViewHolder {
         val binding = ItemReviewBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -29,6 +30,23 @@ class ReviewAdapter(private val onItemClicked: (Review) -> Unit) :
             onItemClicked(current)
         }
     }
+    override fun submitList(list: List<Review>?) {
+        super.submitList(list)
+        if(list != null) {
+            original = list //전체 리스트 저장
+        }
+    }
+    fun filter(query: String) {
+        if(query.isBlank()){
+            submitList(original)
+            return
+        }
+        val filteredList = original.filter { review ->
+            review.title.contains(query, ignoreCase = true)
+        }
+        submitList(filteredList)
+    }
+
 
     class ReviewViewHolder(private val binding: ItemReviewBinding) :
         RecyclerView.ViewHolder(binding.root) {
