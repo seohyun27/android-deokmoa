@@ -1,148 +1,317 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".AddReviewActivity">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp">
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        android:fitsSystemWindows="true">
 
-        <TextView
-            android:id="@+id/label_category"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="카테고리"
-            android:textAppearance="?attr/textAppearanceLabelLarge"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
 
-        <Spinner
-            android:id="@+id/spinner_category"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/label_category" />
+    </com.google.android.material.appbar.AppBarLayout>
 
-        <Button
-            android:id="@+id/btn_select_image"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="이미지 선택"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/spinner_category" />
+    <!-- 스크롤 가능한 본문 -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <ImageView
-            android:id="@+id/iv_selected_image"
-            android:layout_width="150dp"
-            android:layout_height="150dp"
-            android:layout_marginTop="8dp"
-            android:scaleType="centerCrop"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/btn_select_image"
-            tools:src="@tools:sample/backgrounds/scenic"
-            android:contentDescription="선택된 이미지 미리보기" />
-
-        <TextView
-            android:id="@+id/label_title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="작품 제목"
-            android:textAppearance="?attr/textAppearanceLabelLarge"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/iv_selected_image" />
-
-        <EditText
-            android:id="@+id/et_title"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:hint="제목을 입력하세요"
-            android:inputType="text"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/label_title" />
-
-        <TextView
-            android:id="@+id/label_rating"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="별점"
-            android:textAppearance="?attr/textAppearanceLabelLarge"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/et_title" />
-
-        <RatingBar
-            android:id="@+id/rb_rating"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:numStars="5"
-            android:stepSize="0.5"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/label_rating" />
-
-        <TextView
-            android:id="@+id/label_review_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="리뷰 내용"
-            android:textAppearance="?attr/textAppearanceLabelLarge"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/rb_rating" />
-
-        <EditText
-            android:id="@+id/et_review_text"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:gravity="top"
-            android:hint="리뷰를 작성하세요"
-            android:inputType="textMultiLine"
-            android:minLines="5"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/label_review_text" />
-
-        <TextView
-            android:id="@+id/label_tags"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="태그"
-            android:textAppearance="?attr/textAppearanceLabelLarge"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/et_review_text" />
-
-        <!-- 태그 체크박스가 동적으로 추가될 LinearLayout -->
         <LinearLayout
-            android:id="@+id/layout_tags"
-            android:layout_width="0dp"
+            android:id="@+id/write_main"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:orientation="vertical"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/label_tags" />
+            android:orientation="vertical">
 
-        <Button
-            android:id="@+id/btn_save_review"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="리뷰 등록"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/layout_tags" />
+            <!-- 입력 영역 -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilSearch"
+                style="@style/Widget.Material3.TextInputLayout.FilledBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginTop="25dp"
+                android:layout_marginBottom="25dp"
+                android:hint="작품을 검색해보세요"
+                app:actionViewClass="androidx.appcompat.widget.SearchView"
+                app:endIconDrawable="@drawable/search_ic"
+                app:endIconTint="#9AA3B2"
+                app:endIconMode="custom"
+                app:boxBackgroundColor="#E6E9F0"
+                app:boxStrokeWidth="0dp"
+                app:boxCornerRadiusTopStart="16dp"
+                app:boxCornerRadiusTopEnd="16dp"
+                app:boxCornerRadiusBottomStart="16dp"
+                app:boxCornerRadiusBottomEnd="16dp">
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
-</ScrollView>
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_api"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:background="@null"
+                    android:imeOptions="actionSearch"
+                    android:inputType="text"
+                    android:paddingHorizontal="16dp"
+                    android:singleLine="true"
+                    android:textColor="#6B7280"
+                    android:textColorHint="#9AA3B2" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!--api 검색리스트 확인-->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_search_results"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="20dp"
+                android:visibility="gone"
+                tools:visibility="visible"
+                tools:listitem="@layout/item_search_result"
+                tools:itemCount="3"/>
+
+            <!-- 카테고리 라벨 -->
+            <TextView
+                android:id="@+id/label_category"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="16dp"
+                android:text="카테고리"
+                android:textSize="18sp" />
+
+            <!-- 카테고리 선택 -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilCategory"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="16dp"
+                android:hint="카테고리를 선택하세요"
+                app:boxBackgroundColor="@android:color/transparent"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxStrokeColor="#B5BCCE">
+
+                <Spinner
+                    android:id="@+id/spinner_category"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- 사진 첨부 라벨 -->
+            <TextView
+                android:id="@+id/tvAddPic"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:text="사진 첨부하기"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/tvAddPicDesc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="5dp"
+                android:text="기억하고 싶은 해당 작품의 사진을 올려주세요"
+                android:textColor="#667085"
+                android:textSize="12sp" />
+
+            <!-- 이미지 선택 버튼 (위 코드의 btn_select_image) -->
+            <Button
+                android:id="@+id/btn_select_image"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="55dp"
+                android:layout_marginBottom="40dp"
+                android:text="이미지 선택"
+                android:backgroundTint="@color/main"/>
+
+            <!-- 선택된 이미지 미리보기  -->
+            <FrameLayout
+                android:id="@+id/imgContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="16dp">
+
+                <ImageView
+                    android:id="@+id/iv_selected_image"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxWidth="200dp"
+                    android:maxHeight="250dp"
+                    android:adjustViewBounds="true"
+                    android:scaleType="fitCenter"
+                    android:contentDescription="선택된 이미지 미리보기"
+                    android:layout_marginTop="10dp"
+                    tools:src="@tools:sample/backgrounds/scenic" />
+
+                <ImageView
+                    android:id="@+id/btnDeleteImg"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="top|end"
+                    android:padding="4dp"
+                    android:src="@drawable/delete_ic"
+                    android:elevation="4dp"
+                    android:visibility="gone" />
+            </FrameLayout>
+
+            <!-- 제목 라벨 (위 코드의 label_title) -->
+            <TextView
+                android:id="@+id/label_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="24dp"
+                android:layout_marginEnd="16dp"
+                android:text="제목"
+                android:textSize="18sp" />
+
+            <!-- 제목 입력 (위 코드의 et_title) -->
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="6dp"
+                android:hint="제목을 입력하세요"
+                app:boxBackgroundColor="@android:color/transparent"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxStrokeColor="#B5BCCE">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:inputType="text"
+                    android:paddingHorizontal="14dp"
+                    android:textColor="#111111"
+                    android:textColorHint="#9AA3B2"
+                    android:textSize="16sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- 별점 라벨 (위 코드의 label_rating) -->
+            <TextView
+                android:id="@+id/label_rating"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="20dp"
+                android:layout_marginEnd="16dp"
+                android:text="별점"
+                android:textSize="18sp" />
+
+            <!-- 별점 (위 코드의 rb_rating) -->
+            <RatingBar
+                android:id="@+id/rb_rating"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="12dp"
+                android:numStars="5"
+                android:stepSize="0.5"
+                android:rating="0"
+                android:backgroundTint="#E6E9F0"
+                android:progressTint="#FFC500"
+                android:secondaryProgressTint="#80FFC500"/>
+
+            <!-- 리뷰 내용 라벨 (위 코드의 label_review_text) -->
+            <TextView
+                android:id="@+id/label_review_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="20dp"
+                android:layout_marginEnd="16dp"
+                android:text="메모"
+                android:textSize="18sp" />
+
+            <!-- 리뷰 내용 입력 (위 코드의 et_review_text) -->
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="10dp"
+                android:hint="메모할 내용을 작성하세요"
+                app:boxBackgroundColor="@android:color/transparent"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxStrokeColor="#B5BCCE">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_review_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:gravity="top"
+                    android:inputType="textMultiLine"
+                    android:minLines="5"
+                    android:paddingHorizontal="14dp"
+                    android:textColor="#111111"
+                    android:textSize="16sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- 태그 라벨 (위 코드의 label_tags) -->
+            <TextView
+                android:id="@+id/label_tags"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="20dp"
+                android:layout_marginEnd="16dp"
+                android:text="태그"
+                android:textSize="18sp" />
+
+            <!-- 태그 영역: 기존 id 유지 (layout_tags) -->
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/layout_tags"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="20dp"
+                app:chipSpacing="8dp"
+                app:selectionRequired="false"
+                app:singleLine="false"
+                app:singleSelection="false" />
+
+            <!-- 리뷰 등록 버튼 (위 코드의 btn_save_review) -->
+            <Button
+                android:id="@+id/btn_save_review"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="32dp"
+                android:text="저장하기"
+                android:backgroundTint="@color/main"/>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

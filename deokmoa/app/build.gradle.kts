@@ -1,8 +1,17 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    // 추가
-    id("kotlin-kapt")
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+    id("kotlin-kapt") // 룸(Room)을 위한 kapt 플러그인
+}
+
+// local.properties 파일에서 API 키를 읽어오는 부분
+val properties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    properties.load(FileInputStream(localPropertiesFile))
 }
 
 android {
@@ -17,6 +26,12 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField(
+            "String",
+            "TMDB_API_KEY",
+            "\"${properties.getProperty("TMDB_API_KEY") ?: ""}\""
+        )
     }
 
     buildTypes {
@@ -28,21 +43,24 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
         jvmTarget = "11"
     }
 
     buildFeatures {
         viewBinding = true
+        buildConfig = true // buildConfig 기능을 명시적으로 활성화
     }
 }
 
 dependencies {
-
+    // AndroidX & Core
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -51,6 +69,10 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
+    // Lifecycle (ViewModel, LiveData)
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.2")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.2")
 
     // RecyclerView
     implementation("androidx.recyclerview:recyclerview:1.3.2")
@@ -69,9 +91,16 @@ dependencies {
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
-    // Activity KTX (ActivityResultLauncher 사용을 위해)
-    implementation("androidx.activity:activity-ktx:1.9.0")
+    // Retrofit (API 통신)
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.9.3") // 로그 확인용
 
-    // 이미지를 쉽게 로드하기 위한 라이브러리 (선택 사항이지만 권장)
+    // Coil (Image Loading)
     implementation("io.coil-kt:coil:2.6.0")
+
+    // Testing
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 }

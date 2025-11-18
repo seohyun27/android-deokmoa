@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".ui.RankingFragment">
+
+    <!--상단탭-->
+    <LinearLayout
+        android:id="@+id/layoutTabs"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:orientation="horizontal"
+        android:background="#EDEDED">
+
+        <TextView
+            android:id="@+id/tabCategory"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="카테고리"
+            android:textSize="14sp"
+            android:background="@android:color/white"/>
+
+        <TextView
+            android:id="@+id/tabTag"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="태그"
+            android:textSize="14sp"/>
+
+        <TextView
+            android:id="@+id/tabRating"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="평균별점"
+            android:textSize="14sp"/>
+    </LinearLayout>
+    <!--하단본문-->
+    <FrameLayout
+        android:id="@+id/rankingContent"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="16dp" />
+</LinearLayout>

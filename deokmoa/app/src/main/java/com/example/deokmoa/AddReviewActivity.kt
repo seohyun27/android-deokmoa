@@ -1,34 +1,54 @@
 package com.example.deokmoa
 
-import android.R
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
+import android.view.MenuItem
+import android.view.View
 import android.widget.ArrayAdapter
-import android.widget.CheckBox
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import coil.load
 import com.example.deokmoa.data.AppDatabase
+import com.example.deokmoa.data.Category
 import com.example.deokmoa.data.Review
 import com.example.deokmoa.data.Tag
-import com.example.deokmoa.data.Category
 import com.example.deokmoa.databinding.ActivityAddReviewBinding
+import com.google.android.material.chip.Chip
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
-import java.lang.Exception // ⭐️ import 추가
+import java.lang.Exception
+import android.R as AndroidR
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.deokmoa.data.api.ApiConnect
+import com.example.deokmoa.data.api.MovieResult
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
+/* TMDB API 연결 방법(api 사용한 작품 검색 사용 방법)
+* TMDB에서 회원가입 후 각자 api key 받기
+* api key 보안을 위해 각자의 local.properties에 설정
+* TMDB_API_KEY=apikey값 (""는 넣지 않음)*/
 class AddReviewActivity : AppCompatActivity() {
-
+    //api 관련 변수
+    private lateinit var searchAdapter: SearchAdapter
+    private val apiService: ApiConnect by lazy { ApiConnect.create()}
+    private val apiKey = BuildConfig.TMDB_API_KEY
     private lateinit var binding: ActivityAddReviewBinding
     private val database by lazy { AppDatabase.getDatabase(this) }
     private var selectedImageUri: Uri? = null
 
-    // ⭐️ "수정 모드"를 위한 변수
+    // "수정 모드" 변수
     private var editingReviewId: Int = -1
     private var originalImageFileName: String? = null // 원래 이미지 파일 이름 (삭제 처리용)
 
@@ -46,16 +66,23 @@ class AddReviewActivity : AppCompatActivity() {
         binding = ActivityAddReviewBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        setupToolbar()
+        setupSearchRecyclerView()
+        setupSearchEditText()
         setupCategorySpinner()
-        setupTagCheckBoxes()
 
-        // ⭐️ 1. "수정 모드"인지 확인
+        // "수정 모드"인지 확인
         editingReviewId = intent.getIntExtra("EDIT_REVIEW_ID", -1)
         if (editingReviewId != -1) {
-            // "수정 모드"일 경우
-            title = "리뷰 수정" // (선택) 액티비티 제목 변경
-            binding.btnSaveReview.text = "수정하기" // 버튼 텍스트 변경
-            loadReviewData(editingReviewId) // 기존 데이터 불러오기
+            // === 수정 모드 ===
+            title = "리뷰 수정"
+            binding.btnSaveReview.text = "수정하기"
+            loadReviewData(editingReviewId)
+        } else {
+            // === 추가 모드 ===
+            title = "리뷰 작성"
+            // 비어있는 태그 목록으로 Chip들을 화면에 먼저 생성합니다.
+            setupTagChips(emptySet())
         }
 
         binding.btnSelectImage.setOnClickListener {
@@ -66,11 +93,24 @@ class AddReviewActivity : AppCompatActivity() {
             saveReview()
         }
     }
+    private fun setupToolbar() {
+        setSupportActionBar(binding.toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setDisplayShowTitleEnabled(true) // 타이틀 보이게 설정
+    }
 
-    // ⭐️ 2. (신규) "수정 모드"일 때 DB에서 데이터를 가져와 UI에 채우는 함수
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        // 뒤로가기 버튼(home)을 눌렀을 때의 동작
+        if (item.itemId == android.R.id.home) {
+            finish()
+            return true
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
+    // DB에서 기존 리뷰 불러오기
     private fun loadReviewData(reviewId: Int) {
         lifecycleScope.launch {
-            // ReviewDao에 추가한 getReviewByIdSuspend 함수 사용
             val review = database.reviewDao().getReviewByIdSuspend(reviewId)
             if (review == null) {
                 Toast.makeText(this@AddReviewActivity, "리뷰 정보를 불러오지 못했습니다.", Toast.LENGTH_SHORT).show()
@@ -78,12 +118,12 @@ class AddReviewActivity : AppCompatActivity() {
                 return@launch
             }
 
-            // UI에 데이터 채우기
+            // 기본 필드 채우기
             binding.etTitle.setText(review.title)
             binding.rbRating.rating = review.rating
             binding.etReviewText.setText(review.reviewText)
 
-            // 원본 이미지 파일 이름 저장 (나중에 새 이미지로 교체 시 원본 삭제하기 위함)
+            // 기존 이미지 파일 이름 저장
             originalImageFileName = review.imageUri
 
             // 카테고리 스피너 설정
@@ -92,57 +132,128 @@ class AddReviewActivity : AppCompatActivity() {
                 binding.spinnerCategory.setSelection(categoryIndex)
             }
 
-            // 태그 체크박스 설정
-            val selectedTags = review.tags.split(",").toSet()
-            for (i in 0 until binding.layoutTags.childCount) {
-                (binding.layoutTags.getChildAt(i) as? CheckBox)?.let { checkBox ->
-                    if (selectedTags.contains(checkBox.tag.toString())) {
-                        checkBox.isChecked = true
-                    }
-                }
-            }
+            // DB에서 불러온 태그 정보로 Chip을 생성하고 선택 상태 설정.
+            val selectedTags = if (review.tags.isNotEmpty()) review.tags.split(",").toSet() else emptySet()
+            setupTagChips(selectedTags)
 
-            // 이미지 미리보기 설정
+            // 이미지 미리보기
             if (!review.imageUri.isNullOrEmpty()) {
                 val file = File(filesDir, review.imageUri!!)
                 binding.ivSelectedImage.load(file) {
-                    error(R.drawable.ic_dialog_alert) // (임시) 에러 이미지
+                    error(AndroidR.drawable.ic_dialog_alert) // 기본 에러 아이콘
                 }
             }
         }
     }
 
-    // (setupCategorySpinner, setupTagCheckBoxes 함수는 동일 - 수정 없음)
-    private fun setupCategorySpinner() {
-        val categories = Category.values().map { it.displayName }
-        val adapter = ArrayAdapter(this, R.layout.simple_spinner_item, categories)
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        binding.spinnerCategory.adapter = adapter
-    }
-
-    private fun setupTagCheckBoxes() {
-        Tag.values().forEach {tag ->
-            val checkBox = CheckBox(this).apply {
-                text = tag.displayName
-                this.tag = tag.name
-            }
-            binding.layoutTags.addView(checkBox)
+    private fun setupSearchRecyclerView() {
+        searchAdapter = SearchAdapter { movie ->
+            binding.etTitle.setText(movie.title) //제목 자동 채우기
+            binding.rvSearchResults.visibility = View.GONE // 검색 결과 숨기기
+            binding.etApi.text?.clear() // 검색어 초기화
+        }
+        binding.rvSearchResults.apply {
+            adapter = searchAdapter
+            layoutManager = LinearLayoutManager(this@AddReviewActivity)
         }
     }
 
-    // (getSelectedTags 함수는 동일 - 수정 없음)
+    private fun setupSearchEditText() {
+        binding.etApi.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                val query = s.toString()
+                if (query.isNotBlank()) {
+                    searchMoviesApi(query)
+                } else {
+                    binding.rvSearchResults.visibility = View.GONE
+                }
+            }
+
+            override fun afterTextChanged(s: Editable?) {}
+        })
+    }
+
+    private fun searchMoviesApi(query: String) {
+        if (apiKey.isBlank() || apiKey == "null") {
+            Log.e("AddReviewActivity", "TMDB_API_KEY가 설정되지 않았습니다.")
+            binding.rvSearchResults.visibility = View.GONE
+            return
+        }
+
+        apiService.searchMovie(apiKey, query).enqueue(object : Callback<MovieResult> {
+            override fun onResponse(call: Call<MovieResult>, response: Response<MovieResult>) {
+                if (response.isSuccessful) {
+                    val movies = response.body()?.results ?: emptyList()
+                    if (movies.isNotEmpty()) {
+                        searchAdapter.setItems(movies)
+                        binding.rvSearchResults.visibility = View.VISIBLE
+                    } else {
+                        binding.rvSearchResults.visibility = View.GONE
+                    }
+                }
+            }
+            // api 연결 실패시 로그메세지
+            override fun onFailure(call: Call<MovieResult>, t: Throwable) {
+                Log.e("AddReviewActivity", "API Call Failed ${t.message}")
+                binding.rvSearchResults.visibility = View.GONE
+            }
+        })
+    }
+
+    // 카테고리 스피너
+    private fun setupCategorySpinner() {
+        val categories = Category.values().map { it.displayName }
+        val adapter = ArrayAdapter(this, AndroidR.layout.simple_spinner_item, categories)
+        adapter.setDropDownViewResource(AndroidR.layout.simple_spinner_dropdown_item)
+        binding.spinnerCategory.adapter = adapter
+    }
+
+    // Tag enum 기반 해시태그 동적 생성 (선택 상태 인자 추가)
+    private fun setupTagChips(selectedTags: Set<String>) {
+        val chipGroup = binding.layoutTags
+        chipGroup.removeAllViews() // 중복 생성을 방지하기 위해 기존 뷰를 모두 제거
+
+        Tag.values().forEach { tag ->
+            val chip = Chip(this).apply {
+                text = tag.displayName       // 화면에 보이는 이름
+                this.tag = tag.name         // 내부적으로 저장할 enum 이름
+                isCheckable = true
+                isClickable = true
+                isCheckedIconVisible = false
+
+                // Chip 생성 시점에 인자로 받은 Set을 이용해 선택 상태를 바로 결정
+                isChecked = selectedTags.contains(tag.name)
+
+                // 스타일 적용
+                setChipBackgroundColorResource(R.color.hashtag_background_selector)
+                setTextColor(
+                    ContextCompat.getColor(
+                        this@AddReviewActivity,
+                        R.color.black
+                    )
+                )
+            }
+            chipGroup.addView(chip)
+        }
+    }
+
+    // 선택된 해시태그를 enum 형식으로 변환
     private fun getSelectedTags(): String {
         val selectedTags = mutableListOf<String>()
-        for (i in 0 until binding.layoutTags.childCount) {
-            val view = binding.layoutTags.getChildAt(i)
-            if (view is CheckBox && view.isChecked) {
-                selectedTags.add(view.tag.toString())
+        val chipGroup = binding.layoutTags
+
+        for (i in 0 until chipGroup.childCount) {
+            val chip = chipGroup.getChildAt(i) as? Chip ?: continue
+            if (chip.isChecked) {
+                selectedTags.add(chip.tag.toString())
             }
         }
         return selectedTags.joinToString(",")
     }
 
-    // (saveImageToInternalStorage 함수는 동일 - 수정 없음)
+    // 이미지 내부 저장
     private fun saveImageToInternalStorage(uri: Uri): String? {
         val inputStream: InputStream?
         try {
@@ -165,7 +276,7 @@ class AddReviewActivity : AppCompatActivity() {
         }
     }
 
-    // ⭐️ 3. "저장" 함수 수정 (추가/수정 분기 처리)
+    // 저장(추가/수정 공통)
     private fun saveReview() {
         val categoryName = Category.values()[binding.spinnerCategory.selectedItemPosition].name
         val title = binding.etTitle.text.toString()
@@ -178,17 +289,17 @@ class AddReviewActivity : AppCompatActivity() {
             return
         }
 
-        // ⭐️ 이미지 처리 로직 수정
+        // 이미지 처리
         var finalImageFileName: String? = null
         if (selectedImageUri != null) {
-            // 1. (수정/추가 공통) 새 이미지를 선택한 경우
+            // 새 이미지 선택
             finalImageFileName = saveImageToInternalStorage(selectedImageUri!!)
             if (finalImageFileName == null) {
                 Toast.makeText(this, "이미지 저장에 실패했습니다.", Toast.LENGTH_SHORT).show()
-                return // 저장 실패 시 중단
+                return
             }
 
-            // 1-1. (수정 모드 전용) 새 이미지 저장 성공 시, *기존 이미지 파일*이 있었다면 삭제
+            // 수정 모드이고 기존 이미지가 있었다면 삭제
             if (editingReviewId != -1 && !originalImageFileName.isNullOrEmpty()) {
                 try {
                     File(filesDir, originalImageFileName!!).delete()
@@ -198,48 +309,40 @@ class AddReviewActivity : AppCompatActivity() {
                 }
             }
         } else {
-            // 2. 새 이미지를 선택하지 않은 경우
+            // 새 이미지를 선택하지 않은 경우 (수정 모드에서만 기존 이미지 유지)
             if (editingReviewId != -1) {
-                // 2-1. (수정 모드) 기존 이미지 파일 이름을 그대로 사용
                 finalImageFileName = originalImageFileName
             }
-            // 2-2. (추가 모드) null (이미지 없음)
         }
 
-
-        // ⭐️ "수정 모드"와 "추가 모드" 분기
-        if (editingReviewId != -1) {
-            // === "수정 모드"일 경우 ===
-            val updatedReview = Review(
-                id = editingReviewId, //️ 기존 ID를 반드시 포함!!
-                category = categoryName,
-                title = title,
-                rating = rating,
-                reviewText = reviewText,
-                tags = tags,
-                imageUri = finalImageFileName // 새 이미지 또는 기존 이미지
-            )
-
-            lifecycleScope.launch {
-                database.reviewDao().update(updatedReview) //️ update 호출
+        lifecycleScope.launch {
+            if (editingReviewId != -1) {
+                // === 수정 모드 ===
+                val updatedReview = Review(
+                    id = editingReviewId,
+                    category = categoryName,
+                    title = title,
+                    rating = rating,
+                    reviewText = reviewText,
+                    tags = tags,
+                    imageUri = finalImageFileName
+                )
+                database.reviewDao().update(updatedReview)
                 runOnUiThread {
                     Toast.makeText(this@AddReviewActivity, "리뷰가 수정되었습니다.", Toast.LENGTH_SHORT).show()
                     finish()
                 }
-            }
-        } else {
-            // === "추가 모드"일 경우 (기존 로직) ===
-            val review = Review(
-                category = categoryName,
-                title = title,
-                rating = rating,
-                reviewText = reviewText,
-                tags = tags,
-                imageUri = finalImageFileName // 새 이미지 또는 null
-            )
-
-            lifecycleScope.launch {
-                database.reviewDao().insert(review) // ⭐️ insert 호출
+            } else {
+                // === 추가 모드 ===
+                val review = Review(
+                    category = categoryName,
+                    title = title,
+                    rating = rating,
+                    reviewText = reviewText,
+                    tags = tags,
+                    imageUri = finalImageFileName
+                )
+                database.reviewDao().insert(review)
                 runOnUiThread {
                     Toast.makeText(this@AddReviewActivity, "리뷰가 저장되었습니다.", Toast.LENGTH_SHORT).show()
                     finish()
@@ -248,3 +351,4 @@ class AddReviewActivity : AppCompatActivity() {
         }
     }
 }
+

@@ -1,111 +1,175 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ReviewDetailActivity">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <!-- 상단 툴바 -->
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp">
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        android:fitsSystemWindows="true">
 
-        <ImageView
-            android:id="@+id/iv_detail_image"
-            android:layout_width="0dp"
-            android:layout_height="300dp"
-            android:scaleType="centerCrop"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:src="@tools:sample/backgrounds/scenic"
-            android:contentDescription="작품 이미지" />
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+    </com.google.android.material.appbar.AppBarLayout>
 
-        <TextView
-            android:id="@+id/tv_detail_category"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:textAppearance="?attr/textAppearanceBody2"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/iv_detail_image"
-            tools:text="카테고리: 영화" />
-
-        <TextView
-            android:id="@+id/tv_detail_title"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:textAppearance="?attr/textAppearanceHeadline5"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tv_detail_category"
-            tools:text="작품 제목" />
-
-        <RatingBar
-            android:id="@+id/rb_detail_rating"
-            style="?attr/ratingBarStyleIndicator"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:isIndicator="true"
-            android:numStars="5"
-            android:stepSize="0.5"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tv_detail_title" />
-
-        <TextView
-            android:id="@+id/tv_detail_tags"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:textAppearance="?attr/textAppearanceBody2"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/rb_detail_rating"
-            tools:text="태그: 로맨스, 감동적인" />
-
-        <TextView
-            android:id="@+id/tv_detail_review_text"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:lineSpacingExtra="4dp"
-            android:textAppearance="?attr/textAppearanceBody1"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tv_detail_tags"
-            tools:text="여기에는 리뷰 내용이 길게 표시됩니다. \n정말 재미있었습니다." />
+    <!-- 스크롤 전체 영역 -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:orientation="horizontal"
-            app:layout_constraintTop_toBottomOf="@id/tv_detail_review_text"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
+            android:orientation="vertical"
+            android:padding="16dp">
 
-            <Button
-                android:id="@+id/btn_edit"
-                android:layout_width="0dp"
+            <!-- 포스터 + 제목/부제  -->
+            <LinearLayout
+                android:id="@+id/header_area"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="리뷰 수정"
-                android:layout_marginEnd="8dp"
-                style="?attr/materialButtonOutlinedStyle" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="20dp">
 
-            <Button
-                android:id="@+id/btn_delete"
-                android:layout_width="0dp"
+                <!-- 포스터 이미지 -->
+                <ImageView
+                    android:id="@+id/iv_detail_image"
+                    android:layout_width="100dp"
+                    android:layout_height="150dp"
+                    android:scaleType="centerCrop"
+                    android:adjustViewBounds="true"
+                    android:background="#E6E9F0"
+                    android:contentDescription="작품 이미지"
+                    tools:src="@tools:sample/backgrounds/scenic" />
+
+                <!-- 오른쪽 텍스트 영역 -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:orientation="vertical"
+                    android:layout_weight="1">
+
+                    <!-- 제목 -->
+                    <TextView
+                        android:id="@+id/tv_detail_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="#111111"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        tools:text="제목" />
+
+                    <!-- 개봉일 등(api용) -->
+                    <TextView
+                        android:id="@+id/tv_detail_category"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:textColor="#667085"
+                        android:textSize="14sp"
+                        tools:text="개봉일 1997-12-19" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- ⭐ 별점 -->
+            <TextView
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="리뷰 삭제"
-                android:layout_marginStart="8dp"
-                android:backgroundTint="?attr/colorError"
-                android:textColor="?attr/colorOnError" />
+                android:text="별점"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginTop="24dp"/>
+
+            <RatingBar
+                android:id="@+id/rb_detail_rating"
+                style="?attr/ratingBarStyleIndicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="8dp"
+                android:isIndicator="true"
+                android:numStars="5"
+                android:stepSize="0.5"
+                android:progressTint="#FFC500"
+                android:secondaryProgressTint="#80FFC500" />
+
+            <!-- ⭐ 태그(ChipGroup) -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="태그"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginTop="24dp"/>
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chipGroupDetailTags"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                app:chipSpacing="8dp"
+                app:singleLine="false"
+                />
+
+            <!-- 메모 내용 -->
+            <TextView
+                android:id="@+id/label_detail_review_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="메모"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginTop="24dp"/>
+
+            <TextView
+                android:id="@+id/tv_detail_review_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:minHeight="120dp"
+                android:padding="12dp"
+                android:textColor="#111111"
+                android:textSize="16sp"
+                android:lineSpacingExtra="4dp"
+                tools:text="리뷰 상세 내용입니다.\n정말 좋았어요!" />
+
+            <!-- 삭제 버튼 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="end"
+                android:layout_marginTop="28dp">
+
+                <ImageButton
+                    android:id="@+id/btn_delete"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:background="@android:color/transparent"
+                    android:src="@drawable/delete_ic"
+                    android:contentDescription="삭제"
+                    app:iconTint="@color/black" />
+
+            </LinearLayout>
+
         </LinearLayout>
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
-</ScrollView>
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+

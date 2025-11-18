@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:gravity="top|center_horizontal"
+    tools:context=".ui.filterpage.RankingContentFragment">
+
+    <TextView
+        android:id="@+id/tvMostUsedRankingContentTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="사용자의\n평균 별점은"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginTop="50dp"
+        android:lineSpacingExtra="4dp" />
+
+    <RatingBar
+        android:id="@+id/rcAverageRating"
+        style="?attr/ratingBarStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="60dp"
+        android:numStars="5"
+        android:stepSize="0.5"
+        android:rating="3.5"
+        android:scaleX="3"
+        android:scaleY="3"
+        android:isIndicator="true"
+        android:backgroundTint="#E6E9F0"
+        android:progressTint="#FFC500"
+        android:secondaryProgressTint="#80FFC500"/>
+
+    <!-- 가운데 하이라이트 박스 (평균 별점) -->
+    <TextView
+        android:id="@+id/tvMostUsedRankingContent"
+        android:layout_width="250dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="70dp"
+        android:gravity="center"
+        android:text="00점"
+        android:textSize="18sp"
+        android:textColor="#585360"
+        android:background="#DBF6F5" />
+
+</LinearLayout>

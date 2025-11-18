@@ -27,6 +27,7 @@
             android:id="@+id/tv_review_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginTop="15dp"
             android:layout_marginStart="16dp"
             android:textAppearance="?attr/textAppearanceHeadline6"
             app:layout_constraintEnd_toEndOf="parent"
@@ -39,10 +40,13 @@
             style="?attr/ratingBarStyleSmall"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="15dp"
+            android:layout_marginStart="16dp"
             android:isIndicator="true"
             android:numStars="5"
             android:stepSize="0.5"
+            android:scaleX="1.5"
+            android:scaleY="2.0"
             app:layout_constraintStart_toStartOf="@id/tv_review_title"
             app:layout_constraintTop_toBottomOf="@id/tv_review_title" />
 

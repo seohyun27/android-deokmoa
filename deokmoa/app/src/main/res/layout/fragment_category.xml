@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="top|center_horizontal"
+    tools:context=".ui.filterpage.CategoryFragment">
+
+    <TextView
+        android:id="@+id/tvMostUsedCategoryTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="사용자가\n가장 많이 사용한 카테고리는"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginTop="50dp"
+        android:lineSpacingExtra="4dp" />
+
+    <!-- 가운데 하이라이트 박스 (카테고리명) -->
+    <TextView
+        android:id="@+id/tvMostUsedCategory"
+        android:layout_width="250dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="30dp"
+        android:gravity="center"
+        android:text="카테고리"
+        android:textSize="18sp"
+        android:textColor="#585360"
+        android:background="#DBF6F5" />
+
+    <!-- 카테고리 순위 제목 -->
+    <TextView
+        android:id="@+id/tvRankCTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        android:text="카테고리 순위"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <!-- 순위 리스트 -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="25dp">
+
+        <!-- 1순위 -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:id="@+id/tvRankNum1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1."
+                android:textSize="14sp"
+                android:layout_marginEnd="6dp" />
+
+            <TextView
+                android:id="@+id/tvRankCategory1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="일순위"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <!-- 2순위 -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:id="@+id/tvRankNum2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2."
+                android:textSize="14sp"
+                android:layout_marginEnd="6dp" />
+
+            <TextView
+                android:id="@+id/tvRankCategory2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="이순위"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <!-- 3순위 -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp">
+
+            <TextView
+                android:id="@+id/tvRankNum3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="3."
+                android:textSize="14sp"
+                android:layout_marginEnd="6dp" />
+
+            <TextView
+                android:id="@+id/tvRankCategory3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="삼순위"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+
+</LinearLayout>

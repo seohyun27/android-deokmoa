@@ -1,48 +1,60 @@
 package com.example.deokmoa
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.deokmoa.data.AppDatabase
+import androidx.fragment.app.Fragment
 import com.example.deokmoa.databinding.ActivityMainBinding
+import com.example.deokmoa.ui.FilterFragment
+import com.example.deokmoa.ui.HomeFragment
+import com.example.deokmoa.ui.RankingFragment
+import com.example.deokmoa.ui.SettingFragment
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private lateinit var reviewAdapter: ReviewAdapter
-    private val database by lazy { AppDatabase.getDatabase(this) }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        setupRecyclerView()
+        setSupportActionBar(binding.toolbar)
 
-        // '리뷰 기록' (FAB) 버튼 클릭 리스너
-        binding.fabAddReview.setOnClickListener {
-            val intent = Intent(this, AddReviewActivity::class.java)
-            startActivity(intent)
-        }
+        setBottomNavigationView()
 
-        // 데이터베이스의 모든 리뷰를 관찰 (Observe)
-        database.reviewDao().getAll().observe(this) { reviews ->
-            // .toList()를 호출하여 Java List를 Kotlin List로 변환 (오류 수정)
-            reviewAdapter.submitList(reviews?.toList())
+        // 앱이 처음 실행될 때 홈 프래그먼트를 표시
+        if (savedInstanceState == null) {
+            binding.bottomNavigationView.selectedItemId = R.id.fragment_home
         }
     }
-
-    private fun setupRecyclerView() {
-        reviewAdapter = ReviewAdapter { review ->
-            // 아이템 클릭 시 상세 보기 액티비티로 이동
-            val intent = Intent(this, ReviewDetailActivity::class.java)
-            intent.putExtra("REVIEW_ID", review.id)
-            startActivity(intent)
+    private fun setBottomNavigationView() {
+        binding.bottomNavigationView.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.fragment_home -> {
+                    replaceFragment(HomeFragment())
+                    true
+                }
+                R.id.fragment_ranking -> {
+                    replaceFragment(RankingFragment())
+                    true
+                }
+                R.id.fragment_flitter -> {
+                    replaceFragment(FilterFragment())
+                    true
+                }
+                R.id.fragment_setting -> {
+                    replaceFragment(SettingFragment())
+                    true
+                }
+                else -> false
+            }
         }
-        binding.rvReviews.apply {
-            adapter = reviewAdapter
-            layoutManager = LinearLayoutManager(this@MainActivity)
-        }
+    }
+    // 프래그먼트를 교체하는 공통 함수
+    private fun replaceFragment(fragment: Fragment) {
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.main_container, fragment)
+            .commit()
     }
 }
