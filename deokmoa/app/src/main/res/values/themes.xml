@@ -6,6 +6,18 @@
         <item name="android:statusBarColor">@color/white</item>
         <item name="actionMenuTextColor">@color/black</item>
     </style>
+
     <style name="Theme.Deokmoa" parent="Base.Theme.Deokmoa" />
+
+    <style name="Theme.MyApp.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/main</item>
+        <item name="windowSplashScreenAnimatedIcon" tools:targetApi="31">@drawable/logo6</item>
+        <item name="postSplashScreenTheme">@style/Theme.Deokmoa</item>
+    </style>
+
+    <style name="CustomActiveIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:color">@color/bottom_tab</item>
+    </style>
+
 </resources>
 

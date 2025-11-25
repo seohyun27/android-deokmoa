@@ -38,6 +38,7 @@
     android:layout_gravity="bottom"
     app:menu="@menu/menu_bottom_nav"
     app:itemTextColor="@color/black"
-    app:labelVisibilityMode="labeled" />
+    app:labelVisibilityMode="labeled"
+    app:itemActiveIndicatorStyle="@style/CustomActiveIndicator" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

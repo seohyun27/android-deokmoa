@@ -208,6 +208,29 @@ class AddReviewActivity : AppCompatActivity() {
         val adapter = ArrayAdapter(this, AndroidR.layout.simple_spinner_item, categories)
         adapter.setDropDownViewResource(AndroidR.layout.simple_spinner_dropdown_item)
         binding.spinnerCategory.adapter = adapter
+
+        // 카테고리 선택에 따른 검색창 표시,숨김 로직 추가
+        binding.spinnerCategory.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) {
+                val selectedCategory = Category.values()[position]
+
+                // 검색창을 보여줄 카테고리 (애니메이션, 소설, 드라마, 영화)
+                val isSearchable = when (selectedCategory) {
+                    Category.ANIMATION,
+                    Category.NOVEL,
+                    Category.DRAMA,
+                    Category.MOVIE -> true
+                    else -> false // 방탈출, 뮤지컬, 콘서트 등은 검색창 숨김
+                }
+                if (isSearchable) {
+                    binding.tilSearch.visibility = View.VISIBLE
+                } else {
+                    binding.tilSearch.visibility = View.GONE
+                    binding.rvSearchResults.visibility = View.GONE // 숨겨질 때 열려있던 검색 결과 목록도 같이 닫기
+                }
+            }
+            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
+        }
     }
 
     // Tag enum 기반 해시태그 동적 생성 (선택 상태 인자 추가)
