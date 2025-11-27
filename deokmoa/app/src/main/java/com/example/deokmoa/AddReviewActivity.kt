@@ -1,12 +1,15 @@
 package com.example.deokmoa
 
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
+import android.util.Log.e
 import android.view.MenuItem
 import android.view.View
 import android.widget.ArrayAdapter
@@ -16,6 +19,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import coil.load
+import coil.ImageLoader
+import coil.request.ImageRequest
+import coil.request.SuccessResult
 import com.example.deokmoa.data.AppDatabase
 import com.example.deokmoa.data.Category
 import com.example.deokmoa.data.Review
@@ -31,6 +37,9 @@ import android.R as AndroidR
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.deokmoa.data.api.ApiConnect
 import com.example.deokmoa.data.api.MovieResult
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -47,6 +56,7 @@ class AddReviewActivity : AppCompatActivity() {
     private lateinit var binding: ActivityAddReviewBinding
     private val database by lazy { AppDatabase.getDatabase(this) }
     private var selectedImageUri: Uri? = null
+    private var selectedImageUrl: String? = null //api 이미지 url을 저장할 변수
 
     // "수정 모드" 변수
     private var editingReviewId: Int = -1
@@ -57,7 +67,10 @@ class AddReviewActivity : AppCompatActivity() {
     ) { uri: Uri? ->
         uri?.let {
             selectedImageUri = it
+            selectedImageUrl = null
             binding.ivSelectedImage.load(it)
+            binding.btnDeleteImg.visibility = View.VISIBLE
+            binding.btnSelectImage.visibility = View.GONE //이미지 선택 버튼 숨기기
         }
     }
 
@@ -84,9 +97,19 @@ class AddReviewActivity : AppCompatActivity() {
             // 비어있는 태그 목록으로 Chip들을 화면에 먼저 생성합니다.
             setupTagChips(emptySet())
         }
-
+        //이미지 삭제 버튼
         binding.btnSelectImage.setOnClickListener {
+            selectedImageUrl = null
             pickImageLauncher.launch("image/*")
+        }
+        binding.btnDeleteImg.setOnClickListener {
+            selectedImageUri = null
+            selectedImageUrl = null
+            originalImageFileName = null
+
+            binding.ivSelectedImage.setImageDrawable(null)
+            binding.btnDeleteImg.visibility = View.GONE
+            binding.btnSelectImage.visibility = View.VISIBLE // 이미지 삭제 시 이미지 선택 버튼 보이기
         }
 
         binding.btnSaveReview.setOnClickListener {
@@ -142,6 +165,8 @@ class AddReviewActivity : AppCompatActivity() {
                 binding.ivSelectedImage.load(file) {
                     error(AndroidR.drawable.ic_dialog_alert) // 기본 에러 아이콘
                 }
+                binding.btnSelectImage.visibility = View.GONE
+                binding.btnDeleteImg.visibility = View.VISIBLE
             }
         }
     }
@@ -151,6 +176,19 @@ class AddReviewActivity : AppCompatActivity() {
             binding.etTitle.setText(movie.title) //제목 자동 채우기
             binding.rvSearchResults.visibility = View.GONE // 검색 결과 숨기기
             binding.etApi.text?.clear() // 검색어 초기화
+
+            if (!movie.posterPath.isNullOrEmpty()) {
+                val fullPosterUrl = "https://image.tmdb.org/t/p/w500${movie.posterPath}"
+                selectedImageUrl = fullPosterUrl
+                selectedImageUri = null
+
+                binding.ivSelectedImage.load(fullPosterUrl) {
+                    crossfade(true)
+                    placeholder(R.drawable.ic_launcher_background)
+                }
+                binding.btnDeleteImg.visibility = View.VISIBLE // 확인해보기
+                binding.btnSelectImage.visibility = View.GONE
+            }
         }
         binding.rvSearchResults.apply {
             adapter = searchAdapter
@@ -299,6 +337,39 @@ class AddReviewActivity : AppCompatActivity() {
         }
     }
 
+    // URL 이미지를 다운로드 후 로컬에 저장하고 반환
+    private suspend fun downloadImageToInternalStorage(imageUrl: String): String? {
+        return withContext(Dispatchers.IO) {try {
+            // 1. Coil을 사용하여 이미지 로더 생성
+            val loader = ImageLoader(this@AddReviewActivity)
+            val request = ImageRequest.Builder(this@AddReviewActivity)
+                .data(imageUrl)
+                .allowHardware(false) // 비트맵 변환
+                .build()
+
+            val result = loader.execute(request)
+            if (result is SuccessResult) {
+            val bitmap = (result as? BitmapDrawable)?.bitmap
+
+            if (bitmap != null) {
+                // 2. 파일명 생성 및 저장
+                val fileName = "IMG_${System.currentTimeMillis()}.jpg"
+                val file = File(filesDir, fileName)
+                val outputStream = FileOutputStream(file)
+
+                // 3. 비트맵을 파일로 압축 저장
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+                outputStream.flush()
+                outputStream.close()
+
+                return@withContext fileName }
+            }
+        } catch (e: Exception) {
+            Log.e("AddReviewActivity", "API Image Download Failed", e)
+        }
+            return@withContext null
+        }
+    }
     // 저장(추가/수정 공통)
     private fun saveReview() {
         val categoryName = Category.values()[binding.spinnerCategory.selectedItemPosition].name
@@ -307,40 +378,58 @@ class AddReviewActivity : AppCompatActivity() {
         val reviewText = binding.etReviewText.text.toString()
         val tags = getSelectedTags()
 
+        // 기본 유효성 검사
         if (title.isBlank() || reviewText.isBlank()) {
             Toast.makeText(this, "제목과 리뷰 내용을 입력해주세요.", Toast.LENGTH_SHORT).show()
             return
         }
 
-        // 이미지 처리
-        var finalImageFileName: String? = null
-        if (selectedImageUri != null) {
-            // 새 이미지 선택
-            finalImageFileName = saveImageToInternalStorage(selectedImageUri!!)
-            if (finalImageFileName == null) {
-                Toast.makeText(this, "이미지 저장에 실패했습니다.", Toast.LENGTH_SHORT).show()
-                return
-            }
+        // 이미지 다운로드/복사 및 DB 저장을 위해
+        lifecycleScope.launch {
+            var finalImageUri: String? = null
+            // === 이미지 처리 로직 ===
 
-            // 수정 모드이고 기존 이미지가 있었다면 삭제
-            if (editingReviewId != -1 && !originalImageFileName.isNullOrEmpty()) {
-                try {
-                    File(filesDir, originalImageFileName!!).delete()
-                    Log.d("AddReviewActivity", "Old image file deleted: $originalImageFileName")
-                } catch (e: Exception) {
-                    Log.e("AddReviewActivity", "Failed to delete old image file", e)
+            //  갤러리에서 이미지를 선택한 경우
+            if (selectedImageUri != null) {
+                finalImageUri = withContext(Dispatchers.IO) {
+                    saveImageToInternalStorage(selectedImageUri!!)
+                }
+                if (finalImageUri == null) {
+                    Toast.makeText(this@AddReviewActivity, "갤러리 이미지 저장 실패", Toast.LENGTH_SHORT).show()
+                    return@launch
                 }
             }
-        } else {
-            // 새 이미지를 선택하지 않은 경우 (수정 모드에서만 기존 이미지 유지)
-            if (editingReviewId != -1) {
-                finalImageFileName = originalImageFileName
-            }
-        }
+            // TMDB API로 선택한 포스터(URL)가 있는 경우
+            else if (!selectedImageUrl.isNullOrEmpty()) {
+                // 다운로드하여 파일로 저장
+                finalImageUri = downloadImageToInternalStorage(selectedImageUrl!!)
 
-        lifecycleScope.launch {
+                if (finalImageUri == null) {
+                    Toast.makeText(this@AddReviewActivity, "API 이미지 다운로드 실패", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+            }
+            // 수정 모드이고 이미지를 변경하지 않은 경우 (기존 파일 유지)
+            else if (editingReviewId != -1) {
+                finalImageUri = originalImageFileName
+            }
+            // 수정 모드로 새로운 이미지 선택 시 기존 파일 삭제
+            if (editingReviewId != -1 && (selectedImageUri != null || !selectedImageUrl.isNullOrEmpty())) {
+                if (!originalImageFileName.isNullOrEmpty() && !originalImageFileName!!.startsWith("http")) {
+                    withContext(Dispatchers.IO) {
+                        try {
+                            File(filesDir, originalImageFileName!!).delete()
+                            Log.d("AddReviewActivity", "Old image file deleted: $originalImageFileName")
+                        } catch (e: Exception) {
+                            Log.e("AddReviewActivity", "Failed to delete old image file", e)
+                        }
+                    }
+                }
+            }
+
+            // DB 저장 로직
             if (editingReviewId != -1) {
-                // === 수정 모드 ===
+                //수정
                 val updatedReview = Review(
                     id = editingReviewId,
                     category = categoryName,
@@ -348,30 +437,26 @@ class AddReviewActivity : AppCompatActivity() {
                     rating = rating,
                     reviewText = reviewText,
                     tags = tags,
-                    imageUri = finalImageFileName
+                    imageUri = finalImageUri // 파일명 저장
                 )
                 database.reviewDao().update(updatedReview)
-                runOnUiThread {
-                    Toast.makeText(this@AddReviewActivity, "리뷰가 수정되었습니다.", Toast.LENGTH_SHORT).show()
-                    finish()
-                }
+                Toast.makeText(this@AddReviewActivity, "리뷰가 수정되었습니다.", Toast.LENGTH_SHORT).show()
             } else {
-                // === 추가 모드 ===
+                // 추가
                 val review = Review(
                     category = categoryName,
                     title = title,
                     rating = rating,
                     reviewText = reviewText,
                     tags = tags,
-                    imageUri = finalImageFileName
+                    imageUri = finalImageUri // 파일명 저장
                 )
                 database.reviewDao().insert(review)
-                runOnUiThread {
-                    Toast.makeText(this@AddReviewActivity, "리뷰가 저장되었습니다.", Toast.LENGTH_SHORT).show()
-                    finish()
-                }
+                Toast.makeText(this@AddReviewActivity, "리뷰가 저장되었습니다.", Toast.LENGTH_SHORT).show()
             }
+            finish()
         }
     }
 }
+
 
