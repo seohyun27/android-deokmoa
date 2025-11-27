@@ -99,6 +99,8 @@ class ReviewDetailActivity : AppCompatActivity() {
             }
         }
 
+
+        // (populateReviewDetails 함수는 동일 - 수정 없음)
         private fun populateReviewDetails(review: Review) {
             supportActionBar?.title = review.title //toolbar에 제목명
             binding.tvDetailTitle.text = review.title
@@ -126,23 +128,24 @@ class ReviewDetailActivity : AppCompatActivity() {
             }
 
             if (!review.imageUri.isNullOrEmpty()) {
-                val imagePath = review.imageUri!!
-                val file = File(filesDir, imagePath)
-                    binding.ivDetailImage.load(file) {
-                        crossfade(true)
-                        placeholder(R.drawable.ic_launcher_background)
-                        error(R.drawable.ic_launcher_background)
-                        listener(onError = { _, result ->
-                            Log.e(
-                                "ReviewDetailActivity",
-                                "Coil (File) load failed: ${result.throwable.message}")
-                        })
-                    }
+                val file = File(filesDir, review.imageUri!!)
+                binding.ivDetailImage.load(file) {
+                    crossfade(true)
+                    placeholder(R.drawable.ic_launcher_background)
+                    error(R.drawable.ic_launcher_background)
+                    listener(onError = { _, result ->
+                        Log.e(
+                            "ReviewDetailActivity",
+                            "Coil (File) load failed: ${result.throwable.message}"
+                        )
+                    })
+                }
             } else {
                 binding.ivDetailImage.setImageResource(R.drawable.ic_launcher_background)
             }
         }
 
+        // (deleteReview 함수는 동일 - 수정 없음)
         private fun deleteReview(review: Review) {
             lifecycleScope.launch {
                 if (!review.imageUri.isNullOrEmpty()) {
@@ -159,11 +162,12 @@ class ReviewDetailActivity : AppCompatActivity() {
                         Log.e("ReviewDetailActivity", "Failed to delete internal file", e)
                     }
                 }
-                // DB 데이터 삭제
+
                 database.reviewDao().delete(review)
 
                 runOnUiThread {
-                    Toast.makeText(this@ReviewDetailActivity, "리뷰가 삭제되었습니다.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@ReviewDetailActivity, "리뷰가 삭제되었습니다.", Toast.LENGTH_SHORT)
+                        .show()
                     finish()
                 }
             }

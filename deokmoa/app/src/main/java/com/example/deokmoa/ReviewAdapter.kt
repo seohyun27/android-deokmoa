@@ -62,20 +62,20 @@ class ReviewAdapter(private val onItemClicked: (Review) -> Unit) :
 
             // 이미지 파일 이름이 있으면 File 객체로 로드
             if (!review.imageUri.isNullOrEmpty()) {
-                val imagePath = review.imageUri!!
+                // 1. ViewHolder의 아이템 뷰(root)에서 context를 가져온다
+                val context = binding.root.context
+                // 2. context.filesDir와 파일 이름으로 File 객체 생성
+                val file = File(context.filesDir, review.imageUri!!)
 
-                val file = File(binding.root.context.filesDir, imagePath)
-                    binding.ivReviewImage.load(file) {
-                        crossfade(true)
-                        placeholder(R.drawable.ic_launcher_background) // 로딩 중 이미지 (임시)
-                        error(R.drawable.ic_launcher_background) // 에러 시 이미지 (임시)
-                        listener(onError = { _, result ->
-                            Log.e(
-                                "ReviewAdapter",
-                                "Coil (File) load failed: ${result.throwable.message}"
-                            )
-                        })
-                    }
+                // 3. Uri.parse() 대신 File 객체로 로드
+                binding.ivReviewImage.load(file) {
+                    crossfade(true)
+                    placeholder(R.drawable.ic_launcher_background) // 로딩 중 이미지 (임시)
+                    error(R.drawable.ic_launcher_background) // 에러 시 이미지 (임시)
+                    listener(onError = { _, result ->
+                        Log.e("ReviewAdapter", "Coil (File) load failed: ${result.throwable.message}")
+                    })
+                }
             } else {
                 // 이미지가 없을 경우 기본 이미지 설정 (임시)
                 binding.ivReviewImage.setImageResource(R.drawable.ic_launcher_background)
