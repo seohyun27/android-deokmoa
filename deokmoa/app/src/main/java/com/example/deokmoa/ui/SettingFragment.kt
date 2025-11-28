@@ -8,8 +8,8 @@ import android.os.Bundle
 import android.util.TypedValue
 import android.view.*
 import android.widget.Button
-import android.widget.EditText // EditText import 추가
-import android.widget.FrameLayout // FrameLayout import 추가
+import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -18,12 +18,15 @@ import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.deokmoa.AddReviewActivity
 import com.example.deokmoa.R
-import com.example.deokmoa.data.Category
+import com.example.deokmoa.data.AppDatabase
+import com.example.deokmoa.data.CategoryEntity
 import com.example.deokmoa.databinding.FragmentSettingBinding
+import kotlinx.coroutines.launch
 
 class SettingFragment : Fragment() {
 
@@ -105,14 +108,22 @@ class SettingFragment : Fragment() {
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         dialog.show()
 
-        val categoryList = Category.values().map { it.displayName }.toMutableList()
+        // DB에서 카테고리 로드
+        val database = AppDatabase.getDatabase(requireContext())
+        val categoryList = mutableListOf<CategoryEntity>()
         val adapter = CategoryManageAdapter(categoryList)
         rvCategoryList.layoutManager = LinearLayoutManager(context)
         rvCategoryList.adapter = adapter
 
+        // LiveData 관찰
+        database.categoryDao().getAll().observe(viewLifecycleOwner) { categories ->
+            categoryList.clear()
+            categoryList.addAll(categories ?: emptyList())
+            adapter.notifyDataSetChanged()
+        }
+
         // 7. 추가 버튼 클릭 시 입력 다이얼로그 띄우기
         btnAdd.setOnClickListener {
-            // 입력 필드 생성
             val input = EditText(context).apply {
                 hint = "카테고리 이름을 입력하세요"
             }
@@ -134,11 +145,13 @@ class SettingFragment : Fragment() {
                 .setPositiveButton("확인") { _, _ ->
                     val newName = input.text.toString().trim()
                     if (newName.isNotEmpty()) {
-                        categoryList.add(newName)
-                        adapter.notifyItemInserted(categoryList.size - 1)
-                        rvCategoryList.scrollToPosition(categoryList.size - 1)
+                        lifecycleScope.launch {
+                            val newCategory = CategoryEntity(name = newName, isDefault = false)
+                            database.categoryDao().insert(newCategory)
+                            Toast.makeText(context, "'$newName' 카테고리가 추가되었습니다.", Toast.LENGTH_SHORT).show()
+                        }
                     } else {
-                        Toast.makeText(context, "이름을 입력해주세요.", Toast.LENGTH_SHORT).show()
+                       Toast.makeText(context, "이름을 입력해주세요.", Toast.LENGTH_SHORT).show()
                     }
                 }
                 .setNegativeButton("취소", null)
@@ -158,11 +171,8 @@ class SettingFragment : Fragment() {
         ).toInt()
     }
 
-    inner class CategoryManageAdapter(private val items: MutableList<String>) :
+    inner class CategoryManageAdapter(private val items: MutableList<CategoryEntity>) :
         RecyclerView.Adapter<CategoryManageAdapter.ViewHolder>() {
-
-        // 기본 카테고리 목록
-        private val defaultCategories = Category.values().map { it.displayName }
 
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val layout = view as LinearLayout
@@ -197,7 +207,6 @@ class SettingFragment : Fragment() {
             }
             itemLayout.addView(tvName)
 
-            // 삭제 버튼
             val btnDelete = TextView(context).apply {
                 text = "-"
                 textSize = 20f
@@ -211,22 +220,39 @@ class SettingFragment : Fragment() {
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            val categoryName = items[position]
-            holder.tvName.text = categoryName
+            val category = items[position]
+            holder.tvName.text = category.name
 
             // 기본 카테고리면 삭제 버튼 숨김
-            if (defaultCategories.contains(categoryName)) {
+            if (category.isDefault) {
                 holder.btnDelete.visibility = View.INVISIBLE
             } else {
                 holder.btnDelete.visibility = View.VISIBLE
             }
 
             holder.btnDelete.setOnClickListener {
-                val removedItem = items[position]
-                items.removeAt(position)
-                notifyItemRemoved(position)
-                notifyItemRangeChanged(position, items.size)
-                Toast.makeText(requireContext(), "'$removedItem' 삭제됨", Toast.LENGTH_SHORT).show()
+                val categoryToDelete = items[position]
+                
+                // 삭제 전 검증
+                lifecycleScope.launch {
+                    val database = AppDatabase.getDatabase(requireContext())
+                    val reviewCount = database.reviewDao().countReviewsByCategory(categoryToDelete.name)
+                    
+                    if (reviewCount > 0) {
+                        Toast.makeText(
+                            requireContext(),
+                            "'${categoryToDelete.name}' 카테고리를 사용 중인 리뷰가 ${reviewCount}개 있습니다. 삭제할 수 없습니다.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    } else {
+                        database.categoryDao().delete(categoryToDelete)
+                        Toast.makeText(
+                            requireContext(),
+                            "'${categoryToDelete.name}' 카테고리가 삭제되었습니다.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
             }
         }
 

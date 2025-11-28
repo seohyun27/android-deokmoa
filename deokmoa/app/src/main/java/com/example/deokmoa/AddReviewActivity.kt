@@ -23,7 +23,7 @@ import coil.ImageLoader
 import coil.request.ImageRequest
 import coil.request.SuccessResult
 import com.example.deokmoa.data.AppDatabase
-import com.example.deokmoa.data.Category
+import com.example.deokmoa.data.CategoryEntity
 import com.example.deokmoa.data.Review
 import com.example.deokmoa.data.Tag
 import com.example.deokmoa.databinding.ActivityAddReviewBinding
@@ -61,6 +61,9 @@ class AddReviewActivity : AppCompatActivity() {
     // "수정 모드" 변수
     private var editingReviewId: Int = -1
     private var originalImageFileName: String? = null // 원래 이미지 파일 이름 (삭제 처리용)
+    
+    // 카테고리 목록
+    private var categoryList: List<CategoryEntity> = emptyList()
 
     private val pickImageLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent()
@@ -150,7 +153,7 @@ class AddReviewActivity : AppCompatActivity() {
             originalImageFileName = review.imageUri
 
             // 카테고리 스피너 설정
-            val categoryIndex = Category.values().indexOfFirst { it.name == review.category }
+            val categoryIndex = categoryList.indexOfFirst { it.name == review.category }
             if (categoryIndex != -1) {
                 binding.spinnerCategory.setSelection(categoryIndex)
             }
@@ -242,32 +245,32 @@ class AddReviewActivity : AppCompatActivity() {
 
     // 카테고리 스피너
     private fun setupCategorySpinner() {
-        val categories = Category.values().map { it.displayName }
-        val adapter = ArrayAdapter(this, AndroidR.layout.simple_spinner_item, categories)
-        adapter.setDropDownViewResource(AndroidR.layout.simple_spinner_dropdown_item)
-        binding.spinnerCategory.adapter = adapter
+        // DB에서 카테고리 로드
+        lifecycleScope.launch {
+            categoryList = database.categoryDao().getAllSync()
+            val categoryNames = categoryList.map { it.name }
+            val adapter = ArrayAdapter(this@AddReviewActivity, AndroidR.layout.simple_spinner_item, categoryNames)
+            adapter.setDropDownViewResource(AndroidR.layout.simple_spinner_dropdown_item)
+            binding.spinnerCategory.adapter = adapter
 
-        // 카테고리 선택에 따른 검색창 표시,숨김 로직 추가
-        binding.spinnerCategory.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) {
-                val selectedCategory = Category.values()[position]
+            // 카테고리 선택에 따른 검색창 표시,숨김 로직 추가
+            binding.spinnerCategory.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) {
+                    val selectedCategoryName = categoryList[position].name
 
-                // 검색창을 보여줄 카테고리 (애니메이션, 소설, 드라마, 영화)
-                val isSearchable = when (selectedCategory) {
-                    Category.ANIMATION,
-                    Category.NOVEL,
-                    Category.DRAMA,
-                    Category.MOVIE -> true
-                    else -> false // 방탈출, 뮤지컬, 콘서트 등은 검색창 숨김
+                    // 검색창을 보여줄 기본 카테고리 (애니메이션, 소설, 드라마, 영화)
+                    val searchableCategories = listOf("애니메이션", "소설", "드라마", "영화")
+                    val isSearchable = selectedCategoryName in searchableCategories
+                    
+                    if (isSearchable) {
+                        binding.tilSearch.visibility = View.VISIBLE
+                    } else {
+                        binding.tilSearch.visibility = View.GONE
+                        binding.rvSearchResults.visibility = View.GONE // 숨겨질 때 열려있던 검색 결과 목록도 같이 닫기
+                    }
                 }
-                if (isSearchable) {
-                    binding.tilSearch.visibility = View.VISIBLE
-                } else {
-                    binding.tilSearch.visibility = View.GONE
-                    binding.rvSearchResults.visibility = View.GONE // 숨겨질 때 열려있던 검색 결과 목록도 같이 닫기
-                }
+                override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
             }
-            override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
         }
     }
 
@@ -383,7 +386,7 @@ class AddReviewActivity : AppCompatActivity() {
 
     // 저장(추가/수정 공통)
     private fun saveReview() {
-        val categoryName = Category.values()[binding.spinnerCategory.selectedItemPosition].name
+        val categoryName = categoryList[binding.spinnerCategory.selectedItemPosition].name
         val title = binding.etTitle.text.toString()
         val rating = binding.rbRating.rating
         val reviewText = binding.etReviewText.text.toString()
