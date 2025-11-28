@@ -63,7 +63,6 @@ class ReviewAdapter(private val onItemClicked: (Review) -> Unit) :
             // 이미지 파일 이름이 있으면 File 객체로 로드
             if (!review.imageUri.isNullOrEmpty()) {
                 val imagePath = review.imageUri!!
-
                 val file = File(binding.root.context.filesDir, imagePath)
                     binding.ivReviewImage.load(file) {
                         crossfade(true)
