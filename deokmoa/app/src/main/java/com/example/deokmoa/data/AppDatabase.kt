@@ -44,9 +44,11 @@ abstract class AppDatabase : RoomDatabase() {
                                 db.execSQL("INSERT INTO categories (name, isDefault) VALUES ('영화', 1)")
 
                                 // 2. 추가 카테고리 (isDefault = false -> 0)
+                                /**
                                 db.execSQL("INSERT INTO categories (name, isDefault) VALUES ('방탈출', 0)")
                                 db.execSQL("INSERT INTO categories (name, isDefault) VALUES ('뮤지컬', 0)")
                                 db.execSQL("INSERT INTO categories (name, isDefault) VALUES ('콘서트', 0)")
+                                */
 
                                 db.setTransactionSuccessful()
                             } finally {
