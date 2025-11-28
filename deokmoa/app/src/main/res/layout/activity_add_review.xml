@@ -35,7 +35,38 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- 입력 영역 -->
+            <TextView
+                android:id="@+id/label_category"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="25dp"
+                android:layout_marginEnd="16dp"
+                android:text="카테고리"
+                android:textSize="18sp" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilCategory"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="16dp"
+                android:hint="카테고리를 선택하세요"
+                app:boxBackgroundColor="@android:color/transparent"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxStrokeColor="#B5BCCE">
+
+                <Spinner
+                    android:id="@+id/spinner_category"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilSearch"
                 style="@style/Widget.Material3.TextInputLayout.FilledBox"
@@ -43,7 +74,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="20dp"
                 android:layout_marginTop="25dp"
-                android:layout_marginBottom="25dp"
+                android:layout_marginBottom="5dp"
                 android:hint="작품을 검색해보세요"
                 app:actionViewClass="androidx.appcompat.widget.SearchView"
                 app:endIconDrawable="@drawable/search_ic"
@@ -69,52 +100,17 @@
                     android:textColorHint="#9AA3B2" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!--api 검색리스트 확인-->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rv_search_results"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="20dp"
+                android:layout_marginBottom="20dp"
                 android:visibility="gone"
                 tools:visibility="visible"
                 tools:listitem="@layout/item_search_result"
                 tools:itemCount="3"/>
 
-            <!-- 카테고리 라벨 -->
-            <TextView
-                android:id="@+id/label_category"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="15dp"
-                android:layout_marginEnd="16dp"
-                android:text="카테고리"
-                android:textSize="18sp" />
-
-            <!-- 카테고리 선택 -->
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/tilCategory"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginEnd="16dp"
-                android:hint="카테고리를 선택하세요"
-                app:boxBackgroundColor="@android:color/transparent"
-                app:boxCornerRadiusBottomEnd="12dp"
-                app:boxCornerRadiusBottomStart="12dp"
-                app:boxCornerRadiusTopEnd="12dp"
-                app:boxCornerRadiusTopStart="12dp"
-                app:boxStrokeColor="#B5BCCE">
-
-                <Spinner
-                    android:id="@+id/spinner_category"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp" />
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <!-- 사진 첨부 라벨 -->
             <TextView
                 android:id="@+id/tvAddPic"
                 android:layout_width="match_parent"
@@ -136,7 +132,6 @@
                 android:textColor="#667085"
                 android:textSize="12sp" />
 
-            <!-- 이미지 선택 버튼 (위 코드의 btn_select_image) -->
             <Button
                 android:id="@+id/btn_select_image"
                 android:layout_width="wrap_content"
@@ -147,7 +142,6 @@
                 android:text="이미지 선택"
                 android:backgroundTint="@color/main"/>
 
-            <!-- 선택된 이미지 미리보기  -->
             <FrameLayout
                 android:id="@+id/imgContainer"
                 android:layout_width="wrap_content"
@@ -181,7 +175,6 @@
 
             </FrameLayout>
 
-            <!-- 제목 라벨 (위 코드의 label_title) -->
             <TextView
                 android:id="@+id/label_title"
                 android:layout_width="match_parent"
@@ -192,7 +185,6 @@
                 android:text="제목"
                 android:textSize="18sp" />
 
-            <!-- 제목 입력 (위 코드의 et_title) -->
             <com.google.android.material.textfield.TextInputLayout
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
@@ -218,7 +210,6 @@
                     android:textSize="16sp" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- 별점 라벨 (위 코드의 label_rating) -->
             <TextView
                 android:id="@+id/label_rating"
                 android:layout_width="match_parent"
@@ -229,7 +220,6 @@
                 android:text="별점"
                 android:textSize="18sp" />
 
-            <!-- 별점 (위 코드의 rb_rating) -->
             <RatingBar
                 android:id="@+id/rb_rating"
                 android:layout_width="wrap_content"
@@ -243,7 +233,6 @@
                 android:progressTint="#FFC500"
                 android:secondaryProgressTint="#80FFC500"/>
 
-            <!-- 리뷰 내용 라벨 (위 코드의 label_review_text) -->
             <TextView
                 android:id="@+id/label_review_text"
                 android:layout_width="match_parent"
@@ -254,7 +243,6 @@
                 android:text="메모"
                 android:textSize="18sp" />
 
-            <!-- 리뷰 내용 입력 (위 코드의 et_review_text) -->
             <com.google.android.material.textfield.TextInputLayout
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
@@ -281,7 +269,6 @@
                     android:textSize="16sp" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- 태그 라벨 (위 코드의 label_tags) -->
             <TextView
                 android:id="@+id/label_tags"
                 android:layout_width="match_parent"
@@ -292,7 +279,6 @@
                 android:text="태그"
                 android:textSize="18sp" />
 
-            <!-- 태그 영역: 기존 id 유지 (layout_tags) -->
             <com.google.android.material.chip.ChipGroup
                 android:id="@+id/layout_tags"
                 android:layout_width="match_parent"
@@ -303,7 +289,6 @@
                 app:singleLine="false"
                 app:singleSelection="false" />
 
-            <!-- 리뷰 등록 버튼 (위 코드의 btn_save_review) -->
             <Button
                 android:id="@+id/btn_save_review"
                 android:layout_width="match_parent"

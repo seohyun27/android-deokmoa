@@ -33,32 +33,32 @@ abstract class AppDatabase : RoomDatabase() {
                     .addCallback(object : RoomDatabase.Callback() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
                             super.onCreate(db)
-                            // 데이터베이스가 처음 생성될 때 기본 카테고리 추가
-                            INSTANCE?.let { database ->
-                                CoroutineScope(Dispatchers.IO).launch {
-                                    prepopulateCategories(database.categoryDao())
-                                }
+
+                            // DB 생성 시점에 SQL 쿼리로 직접 데이터 삽입
+                            db.beginTransaction()
+                            try {
+                                // 1. 기본 카테고리 (isDefault = true -> 1)
+                                db.execSQL("INSERT INTO categories (name, isDefault) VALUES ('애니메이션', 1)")
+                                db.execSQL("INSERT INTO categories (name, isDefault) VALUES ('소설', 1)")
+                                db.execSQL("INSERT INTO categories (name, isDefault) VALUES ('드라마', 1)")
+                                db.execSQL("INSERT INTO categories (name, isDefault) VALUES ('영화', 1)")
+
+                                // 2. 추가 카테고리 (isDefault = false -> 0)
+                                /**
+                                db.execSQL("INSERT INTO categories (name, isDefault) VALUES ('방탈출', 0)")
+                                db.execSQL("INSERT INTO categories (name, isDefault) VALUES ('뮤지컬', 0)")
+                                db.execSQL("INSERT INTO categories (name, isDefault) VALUES ('콘서트', 0)")
+                                */
+
+                                db.setTransactionSuccessful()
+                            } finally {
+                                db.endTransaction()
                             }
                         }
-                    })
-                    .build()
+                    })                    .build()
                 INSTANCE = instance
                 instance
             }
-        }
-
-        // 기본 카테고리 미리 채우기
-        private suspend fun prepopulateCategories(categoryDao: CategoryDao) {
-            val defaultCategories = listOf(
-                CategoryEntity(name = "애니메이션", isDefault = true),
-                CategoryEntity(name = "소설", isDefault = true),
-                CategoryEntity(name = "드라마", isDefault = true),
-                CategoryEntity(name = "영화", isDefault = true),
-                CategoryEntity(name = "방탈출", isDefault = false),
-                CategoryEntity(name = "뮤지컬", isDefault = false),
-                CategoryEntity(name = "콘서트", isDefault = false)
-            )
-            defaultCategories.forEach { categoryDao.insert(it) }
         }
     }
 }

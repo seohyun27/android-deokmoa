@@ -1,22 +1,22 @@
 package com.example.deokmoa
 
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
-import android.util.Log.e
 import android.view.MenuItem
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Toast
+import android.transition.AutoTransition
+import android.transition.TransitionManager
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import androidx.lifecycle.lifecycleScope
 import coil.load
 import coil.ImageLoader
@@ -37,7 +37,6 @@ import android.R as AndroidR
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.deokmoa.data.api.ApiConnect
 import com.example.deokmoa.data.api.MovieResult
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.Call
@@ -261,7 +260,13 @@ class AddReviewActivity : AppCompatActivity() {
                     // 검색창을 보여줄 기본 카테고리 (애니메이션, 소설, 드라마, 영화)
                     val searchableCategories = listOf("애니메이션", "소설", "드라마", "영화")
                     val isSearchable = selectedCategoryName in searchableCategories
-                    
+
+                    // 해당 줄 아래에서 일어나는 모든 레이아웃 변경(visibility 등)이 부드럽게 애니메이션 되도록 설정
+                    val transition = AutoTransition()
+                    transition.duration = 200  // 애니메이션의 속도를 200ms로 설정
+                    transition.interpolator = FastOutSlowInInterpolator()
+                    TransitionManager.beginDelayedTransition(binding.writeMain, transition)
+
                     if (isSearchable) {
                         binding.tilSearch.visibility = View.VISIBLE
                     } else {

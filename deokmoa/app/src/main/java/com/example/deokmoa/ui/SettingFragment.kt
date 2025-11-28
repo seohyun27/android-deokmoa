@@ -144,14 +144,25 @@ class SettingFragment : Fragment() {
                 .setView(container)
                 .setPositiveButton("확인") { _, _ ->
                     val newName = input.text.toString().trim()
+
                     if (newName.isNotEmpty()) {
-                        lifecycleScope.launch {
-                            val newCategory = CategoryEntity(name = newName, isDefault = false)
-                            database.categoryDao().insert(newCategory)
-                            Toast.makeText(context, "'$newName' 카테고리가 추가되었습니다.", Toast.LENGTH_SHORT).show()
+                        // [수정된 부분] 중복 검사 로직 추가
+                        // categoryList에 입력한 이름과 같은 게 있는지 확인합니다.
+                        val isDuplicate = categoryList.any { it.name == newName }
+
+                        if (isDuplicate) {
+                            // 중복이면 경고 메시지 표시
+                            Toast.makeText(context, "이미 존재하는 카테고리입니다.", Toast.LENGTH_SHORT).show()
+                        } else {
+                            // 중복이 아니면 DB에 추가
+                            lifecycleScope.launch {
+                                val newCategory = CategoryEntity(name = newName, isDefault = false)
+                                database.categoryDao().insert(newCategory)
+                                Toast.makeText(context, "'$newName' 카테고리가 추가되었습니다.", Toast.LENGTH_SHORT).show()
+                            }
                         }
                     } else {
-                       Toast.makeText(context, "이름을 입력해주세요.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "이름을 입력해주세요.", Toast.LENGTH_SHORT).show()
                     }
                 }
                 .setNegativeButton("취소", null)
