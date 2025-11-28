@@ -128,22 +128,25 @@ class ReviewDetailActivity : AppCompatActivity() {
             if (!review.imageUri.isNullOrEmpty()) {
                 val imagePath = review.imageUri!!
                 val file = File(filesDir, imagePath)
-                    binding.ivDetailImage.load(file) {
-                        crossfade(true)
-                        placeholder(R.drawable.ic_launcher_background)
-                        error(R.drawable.ic_launcher_background)
-                        listener(onError = { _, result ->
-                            Log.e(
-                                "ReviewDetailActivity",
-                                "Coil (File) load failed: ${result.throwable.message}")
-                        })
-                    }
+
+                binding.ivDetailImage.load(file) {
+                    crossfade(true)
+                    placeholder(R.drawable.ic_launcher_background)
+                    error(R.drawable.ic_launcher_background)
+                    listener(onError = { _, result ->
+                        Log.e(
+                            "ReviewDetailActivity",
+                            "Coil (File) load failed: ${result.throwable.message}"
+                        )
+                    })
+                }
             } else {
                 binding.ivDetailImage.setImageResource(R.drawable.ic_launcher_background)
             }
         }
 
-        private fun deleteReview(review: Review) {
+
+            private fun deleteReview(review: Review) {
             lifecycleScope.launch {
                 if (!review.imageUri.isNullOrEmpty()) {
                     try {

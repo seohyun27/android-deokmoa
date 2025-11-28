@@ -339,37 +339,48 @@ class AddReviewActivity : AppCompatActivity() {
 
     // URL 이미지를 다운로드 후 로컬에 저장하고 반환
     private suspend fun downloadImageToInternalStorage(imageUrl: String): String? {
-        return withContext(Dispatchers.IO) {try {
-            // 1. Coil을 사용하여 이미지 로더 생성
-            val loader = ImageLoader(this@AddReviewActivity)
-            val request = ImageRequest.Builder(this@AddReviewActivity)
-                .data(imageUrl)
-                .allowHardware(false) // 비트맵 변환
-                .build()
+        return withContext(Dispatchers.IO) {
+            try {
+                //  Coil 이미지 로더 생성
+                val loader = ImageLoader(this@AddReviewActivity)
+                val request = ImageRequest.Builder(this@AddReviewActivity)
+                    .data(imageUrl)
+                    .allowHardware(false) // 비트맵으로 받기 위해
+                    .build()
 
-            val result = loader.execute(request)
-            if (result is SuccessResult) {
-            val bitmap = (result as? BitmapDrawable)?.bitmap
+                val result = loader.execute(request)
 
-            if (bitmap != null) {
-                // 2. 파일명 생성 및 저장
-                val fileName = "IMG_${System.currentTimeMillis()}.jpg"
-                val file = File(filesDir, fileName)
-                val outputStream = FileOutputStream(file)
+                if (result is SuccessResult) {
+                    // drawable을 꺼내서 BitmapDrawable 로 캐스팅해야 함
+                    val drawable = result.drawable
+                    val bitmap = (drawable as? BitmapDrawable)?.bitmap
 
-                // 3. 비트맵을 파일로 압축 저장
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
-                outputStream.flush()
-                outputStream.close()
+                    if (bitmap != null) {
+                        // 파일명 생성 및 저장
+                        val fileName = "IMG_${System.currentTimeMillis()}.jpg"
+                        val file = File(filesDir, fileName)
+                        val outputStream = FileOutputStream(file)
 
-                return@withContext fileName }
+                        // 비트맵을 파일로 압축 저장
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+                        outputStream.flush()
+                        outputStream.close()
+
+                        Log.d("AddReviewActivity", "API image saved: $fileName")
+                        return@withContext fileName
+                    } else {
+                        Log.e("AddReviewActivity", "Bitmap is null (drawable cast 실패)")
+                    }
+                } else {
+                    Log.e("AddReviewActivity", "Coil result is not SuccessResult: $result")
+                }
+            } catch (e: Exception) {
+                Log.e("AddReviewActivity", "API Image Download Failed", e)
             }
-        } catch (e: Exception) {
-            Log.e("AddReviewActivity", "API Image Download Failed", e)
-        }
             return@withContext null
         }
     }
+
     // 저장(추가/수정 공통)
     private fun saveReview() {
         val categoryName = Category.values()[binding.spinnerCategory.selectedItemPosition].name
