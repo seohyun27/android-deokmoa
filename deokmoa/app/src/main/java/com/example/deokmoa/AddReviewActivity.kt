@@ -13,6 +13,7 @@ import android.widget.ArrayAdapter
 import android.widget.Toast
 import android.transition.AutoTransition
 import android.transition.TransitionManager
+import android.view.MotionEvent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -112,6 +113,17 @@ class AddReviewActivity : AppCompatActivity() {
             binding.ivSelectedImage.setImageDrawable(null)
             binding.btnDeleteImg.visibility = View.GONE
             binding.btnSelectImage.visibility = View.VISIBLE // 이미지 삭제 시 이미지 선택 버튼 보이기
+        }
+
+        // 리뷰 입력창 터치 시 스크롤 간섭 해결
+        binding.etReviewText.setOnTouchListener { v, event ->
+            if (v.id == R.id.et_review_text) {
+                v.parent.requestDisallowInterceptTouchEvent(true)
+                when (event.action and MotionEvent.ACTION_MASK) {
+                    MotionEvent.ACTION_UP -> v.parent.requestDisallowInterceptTouchEvent(false)
+                }
+            }
+            false
         }
 
         binding.btnSaveReview.setOnClickListener {

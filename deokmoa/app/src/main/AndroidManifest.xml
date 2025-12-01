@@ -28,9 +28,11 @@
         </activity>
 
         <!-- 새로 추가한 액티비티 등록 -->
-        <activity android:name=".AddReviewActivity" android:exported="false" />
+        <activity
+            android:name=".AddReviewActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
         <activity android:name=".ReviewDetailActivity" android:exported="false" />
-
         <uses-library android:name="org.apach.http.legacy"
             android:required="false"/>
 
