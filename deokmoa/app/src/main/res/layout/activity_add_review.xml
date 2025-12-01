@@ -69,19 +69,24 @@
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilSearch"
-                style="@style/Widget.Material3.TextInputLayout.FilledBox"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="20dp"
                 android:layout_marginTop="25dp"
                 android:layout_marginBottom="5dp"
-                android:hint="작품을 검색해보세요"
+
+                app:hintEnabled="false"
+
                 app:actionViewClass="androidx.appcompat.widget.SearchView"
                 app:endIconDrawable="@drawable/search_ic"
                 app:endIconTint="#9AA3B2"
                 app:endIconMode="custom"
+
                 app:boxBackgroundColor="#E6E9F0"
                 app:boxStrokeWidth="0dp"
+                app:boxStrokeWidthFocused="0dp"
+
                 app:boxCornerRadiusTopStart="16dp"
                 app:boxCornerRadiusTopEnd="16dp"
                 app:boxCornerRadiusBottomStart="16dp"
@@ -92,6 +97,13 @@
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
                     android:background="@null"
+
+                    android:paddingTop="0dp"
+                    android:paddingBottom="0dp"
+                    android:gravity="center_vertical"
+
+                    android:hint="작품을 검색해보세요"
+
                     android:imeOptions="actionSearch"
                     android:inputType="text"
                     android:paddingHorizontal="16dp"
