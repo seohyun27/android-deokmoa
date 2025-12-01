@@ -16,7 +16,7 @@ import com.example.deokmoa.R
 import com.example.deokmoa.ReviewAdapter
 import com.example.deokmoa.ReviewDetailActivity
 import com.example.deokmoa.data.AppDatabase
-import com.example.deokmoa.data.Category
+import com.example.deokmoa.data.CategoryEntity  // [변경] Category -> CategoryEntity
 import com.example.deokmoa.data.Review
 import com.example.deokmoa.data.Tag
 import com.example.deokmoa.databinding.FragmentFilterBinding
@@ -31,6 +31,7 @@ class FilterFragment : Fragment() {
     private val database by lazy { AppDatabase.getDatabase(requireContext()) }
 
     private var allReviews: List<Review> = emptyList()
+    private var categoryList: List<CategoryEntity> = emptyList()  // [추가] DB 카테고리 저장용
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -47,6 +48,12 @@ class FilterFragment : Fragment() {
         setupUI()
         setupRecyclerView()
 
+        // [추가] DB에서 카테고리 로드
+        database.categoryDao().getAll().observe(viewLifecycleOwner) { categories ->
+            categoryList = categories ?: emptyList()
+            setupCategorySpinner()
+        }
+
         // DB에서 전체 데이터를 로드 (초기 상태)
         database.reviewDao().getAll().observe(viewLifecycleOwner) { reviews ->
             allReviews = reviews ?: emptyList()
@@ -54,14 +61,18 @@ class FilterFragment : Fragment() {
         }
     }
 
-    private fun setupUI() {
-        // 1. 카테고리 스피너
+    // [추가] 카테고리 스피너 설정 - DB에서 로드
+    private fun setupCategorySpinner() {
         val categoryDisplayList = mutableListOf("전체 카테고리")
-        categoryDisplayList.addAll(Category.values().map { it.displayName })
+        categoryDisplayList.addAll(categoryList.map { it.name })
 
         val categoryAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, categoryDisplayList)
         categoryAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         binding.spinnerFilterCategory.adapter = categoryAdapter
+    }
+
+    private fun setupUI() {
+        // [삭제됨] 1. 카테고리 스피너 - setupCategorySpinner()로 이동
 
         // 2. 별점 RatingBar 설정
         binding.rbFilterRating.setOnRatingBarChangeListener { _, rating, _ ->
@@ -111,7 +122,12 @@ class FilterFragment : Fragment() {
     private fun applyFilter() {
         // 1. 카테고리
         val selectedCategoryPos = binding.spinnerFilterCategory.selectedItemPosition
-        val selectedCategoryName = if (selectedCategoryPos == 0) "ALL" else Category.values()[selectedCategoryPos - 1].name
+        // [변경] enum 대신 DB 카테고리 사용
+        val selectedCategoryName = if (selectedCategoryPos == 0) {
+            null  // 전체 카테고리
+        } else {
+            categoryList.getOrNull(selectedCategoryPos - 1)?.name
+        }
 
         // 2. 별점
         val minRating = binding.rbFilterRating.rating
@@ -128,8 +144,8 @@ class FilterFragment : Fragment() {
 
         // 4. 필터링 실행
         val filteredList = allReviews.filter { review ->
-            // 카테고리 조건
-            val isCategoryMatch = (selectedCategoryName == "ALL") || (review.category == selectedCategoryName)
+            // [변경] 카테고리 조건 - null이면 전체
+            val isCategoryMatch = (selectedCategoryName == null) || (review.category == selectedCategoryName)
 
             // 별점 조건
             val isRatingMatch = review.rating >= minRating
